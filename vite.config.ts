@@ -1,5 +1,8 @@
 import fs from 'node:fs'
 import { defineConfig } from 'vite'
+import { fileURLToPath, URL } from 'node:url'
+import autoprefixer from 'autoprefixer'
+import tailwind from 'tailwindcss'
 import vue from '@vitejs/plugin-vue'
 import electron from 'vite-plugin-electron/simple'
 import pkg from './package.json'
@@ -13,6 +16,16 @@ export default defineConfig(({ command }) => {
   const sourcemap = isServe || !!process.env.VSCODE_DEBUG
 
   return {
+    css: {
+      postcss: {
+        plugins: [tailwind(), autoprefixer()],
+      },
+    },
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url))
+      },
+    },
     plugins: [
       vue(),
       electron({
