@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, screen } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -23,9 +23,7 @@ export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 export const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL
 
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
-  ? path.join(process.env.APP_ROOT, 'public')
-  : RENDERER_DIST
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
 // Disable GPU Acceleration for Windows 7
 if (os.release().startsWith('6.1')) app.disableHardwareAcceleration()
@@ -57,7 +55,8 @@ async function createWindow() {
     },
   })
 
-  if (VITE_DEV_SERVER_URL) { // #298
+  if (VITE_DEV_SERVER_URL) {
+    // #298
     win.loadURL(VITE_DEV_SERVER_URL)
     // Open devTool if the app is not packaged
     win.webContents.openDevTools()
@@ -100,6 +99,35 @@ app.on('activate', () => {
   } else {
     createWindow()
   }
+})
+
+let wallpaperWindow: BrowserWindow | null = null
+
+// 添加设置壁纸的函数
+ipcMain.on('set-wallpaper', async (_, url: string) => {
+  // 获取主屏幕
+  const primaryDisplay = screen.getPrimaryDisplay()
+  const { width, height } = primaryDisplay.workAreaSize
+
+  if (!wallpaperWindow) {
+    wallpaperWindow = new BrowserWindow({
+      width,
+      height,
+      type: 'desktop', // 设置为桌面窗口
+      frame: false, // 无边框
+      transparent: true,
+      webPreferences: {
+        preload,
+      },
+    })
+
+    // 监听窗口关闭事件
+    wallpaperWindow.on('closed', () => {
+      wallpaperWindow = null
+    })
+  }
+
+  await wallpaperWindow.loadURL(url)
 })
 
 // New window example arg: new windows url
