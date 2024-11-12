@@ -40,6 +40,8 @@ let win: BrowserWindow | null = null
 const preload = path.join(__dirname, '../preload/index.mjs')
 const indexHtml = path.join(RENDERER_DIST, 'index.html')
 
+const isAutoLaunch = process.argv.includes('--auto-launch')
+
 async function createWindow() {
   win = new BrowserWindow({
     title: 'Main window',
@@ -78,7 +80,15 @@ async function createWindow() {
   // win.webContents.on('will-navigate', (event, url) => { }) #344
 }
 
-app.whenReady().then(createWindow)
+// app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  createWindow()
+
+  if (isAutoLaunch) {
+    console.log('应用是通过开机自启动打开的')
+    win?.hide()
+  }
+})
 
 app.on('window-all-closed', () => {
   win = null
@@ -97,6 +107,8 @@ app.on('activate', () => {
   const allWindows = BrowserWindow.getAllWindows()
   if (allWindows.length) {
     allWindows[0].focus()
+    // if (win) {
+    // win.focus()
   } else {
     createWindow()
   }
@@ -173,3 +185,25 @@ ipcMain.handle('open-win', (_, arg) => {
     childWindow.loadFile(indexHtml, { hash: arg })
   }
 })
+
+// 设置开机自动启动
+app.setLoginItemSettings({
+  openAtLogin: true,
+  openAsHidden: false,
+  path: process.execPath,
+  args: ['--auto-launch'],
+})
+
+// 对于 macOS，还可以通过 app.getLoginItemSettings() 来判断
+// if (process.platform === 'darwin') {
+//   const loginSettings = app.getLoginItemSettings()
+//   const wasOpenedAtLogin = loginSettings.wasOpenedAtLogin
+//   const wasOpenedAsHidden = loginSettings.wasOpenedAsHidden
+
+//   if (wasOpenedAtLogin) {
+//     console.log('应用是通过开机自启动打开的')
+//     if (wasOpenedAsHidden) {
+//       console.log('并且是以隐藏方式启动的')
+//     }
+//   }
+// }

@@ -2,15 +2,22 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import ThemeToggle from '@/components/theme/index.vue'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
-const wallpaperUrl = ref('https://xiaoyao-ye.github.io/ios17-clock/')
+const WALLPAPER_URL_KEY = 'wallpaper-url'
+const wallpaperUrl = ref('https://xiaoyao-ye.github.io/blog/')
 
 const handleSetWallpaper = async () => {
   if (!wallpaperUrl.value) return alert('请输入壁纸URL')
 
   window.ipcRenderer.send('set-wallpaper', wallpaperUrl.value)
+  localStorage.setItem(WALLPAPER_URL_KEY, wallpaperUrl.value)
 }
+
+onMounted(() => {
+  const savedUrl = localStorage.getItem(WALLPAPER_URL_KEY)
+  if (savedUrl) window.ipcRenderer.send('set-wallpaper', savedUrl)
+})
 </script>
 
 <template>
