@@ -106,9 +106,14 @@ app.on('second-instance', () => {
 app.on('activate', () => {
   const allWindows = BrowserWindow.getAllWindows()
   if (allWindows.length) {
-    allWindows[0].focus()
-    // if (win) {
-    // win.focus()
+    // 找到非 wallpaperWindow 的窗口
+    const mainWindow = allWindows.find(w => w !== wallpaperWindow)
+    if (mainWindow) {
+      mainWindow.focus()
+    } else {
+      // 如果没有主窗口，创建一个新的
+      createWindow()
+    }
   } else {
     createWindow()
   }
