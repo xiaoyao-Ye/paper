@@ -124,9 +124,11 @@ app.on('activate', () => {
 })
 
 let wallpaperWindow: BrowserWindow | null = null
+let currentUrl: string = ''
 
 // 添加设置壁纸的函数
 ipcMain.on('set-wallpaper', async (_, url: string) => {
+  if (currentUrl === url) return
   // 获取主屏幕
   const primaryDisplay = screen.getPrimaryDisplay()
   const { width, height, x, y } = primaryDisplay.bounds
@@ -188,6 +190,7 @@ ipcMain.on('set-wallpaper', async (_, url: string) => {
   // wallpaperWindow.setAlwaysOnTop(true, 'screen-saver')
 
   await wallpaperWindow.loadURL(url)
+  currentUrl = url
   // 手动显示, 抵消 setVisibleOnAllWorkspaces 的副作用, 首次打开时 opt + cmd + h 还是无法 hide win窗口
   app.dock.show()
   win.focus()
