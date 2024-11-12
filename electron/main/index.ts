@@ -43,9 +43,10 @@ const indexHtml = path.join(RENDERER_DIST, 'index.html')
 async function createWindow() {
   win = new BrowserWindow({
     title: 'Main window',
-    icon: path.join(process.env.VITE_PUBLIC, 'favicon.ico'),
+    icon: path.join(process.env.VITE_PUBLIC, 'logo_1024.png'),
     webPreferences: {
       preload,
+      // webSecurity: false,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
       // nodeIntegration: true,
 
@@ -107,25 +108,51 @@ let wallpaperWindow: BrowserWindow | null = null
 ipcMain.on('set-wallpaper', async (_, url: string) => {
   // 获取主屏幕
   const primaryDisplay = screen.getPrimaryDisplay()
-  const { width, height } = primaryDisplay.workAreaSize
+  const { width, height, x, y } = primaryDisplay.bounds
 
   if (!wallpaperWindow) {
     wallpaperWindow = new BrowserWindow({
       width,
       height,
+      x,
+      y,
       type: 'desktop', // 设置为桌面窗口
       frame: false, // 无边框
       transparent: true,
+      titleBarStyle: 'hidden',
+      roundedCorners: false, // 禁用圆角
+      // Windows 下必须配置，而 MacOS 则不需要（否则会打开一个全屏新桌面）
+      fullscreen: process.platform !== 'darwin',
+      // 使覆盖全屏幕，包含 MacOS Menu Bar
+      enableLargerThanScreen: true,
+      // Windows 下必须配置，否则会禁用视频播放
+      // type: 'toolbar',
+      // trafficLightPosition: { x: 999999, y: 999999 }, // 将红绿灯按钮移到看不见的位置
+      // show: false,
+      // resizable: false,
+      // movable: false,
+      // focusable: false,
+      // useContentSize: true,
       webPreferences: {
         preload,
+        // webSecurity: false,
+        // nodeIntegration: true,
+        // contextIsolation: false,
       },
     })
 
-    // 监听窗口关闭事件
+    // wallpaperWindow.once('ready-to-show', () => {
+    //   console.log('ready-to-show')
+    //   wallpaperWindow.show()
+    // })
+
     wallpaperWindow.on('closed', () => {
       wallpaperWindow = null
     })
   }
+  // 使覆盖全屏幕，包含 MacOS Menu (!!!没有退出,退出极其困难, 智能option + command + esc +回车)
+  // 这些属性能能覆盖 mac 菜单栏: pop-up-menu/status/screen-saver
+  // wallpaperWindow.setAlwaysOnTop(true, 'screen-saver')
 
   await wallpaperWindow.loadURL(url)
 })

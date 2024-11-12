@@ -3,14 +3,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import ThemeToggle from '@/components/theme/index.vue'
 import { ref } from 'vue'
-// import { ipcRenderer } from 'electron'
 
 const wallpaperUrl = ref('https://xiaoyao-ye.github.io/ios17-clock/')
 
 const handleSetWallpaper = async () => {
   if (!wallpaperUrl.value) return alert('请输入壁纸URL')
 
-  ipcRenderer.send('set-wallpaper', wallpaperUrl.value)
+  window.ipcRenderer.send('set-wallpaper', wallpaperUrl.value)
 }
 </script>
 
