@@ -161,6 +161,18 @@ ipcMain.on('set-wallpaper', async (_, url: string) => {
     wallpaperWindow.on('closed', () => {
       wallpaperWindow = null
     })
+
+    if (process.platform === 'darwin') {
+      wallpaperWindow.setVisibleOnAllWorkspaces(true, {
+        // 这种方式没闪烁, 但是 win 窗口无法触发 option + command + h 的 hide 效果,并且关掉 win 窗口后只能重新启动应用才能打开 win.
+        visibleOnFullScreen: true,
+      })
+    }
+    // wallpaperWindow.on('hide', e => {
+    // 这种方式会有闪烁
+    //   wallpaperWindow.showInactive()
+    //   // wallpaperWindow.show()
+    // })
   }
   // 使覆盖全屏幕，包含 MacOS Menu (!!!没有退出,退出极其困难, 智能option + command + esc +回车)
   // 这些属性能能覆盖 mac 菜单栏: pop-up-menu/status/screen-saver
