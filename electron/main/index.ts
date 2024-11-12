@@ -78,6 +78,10 @@ async function createWindow() {
     return { action: 'deny' }
   })
   // win.webContents.on('will-navigate', (event, url) => { }) #344
+
+  win.on('closed', () => {
+    app.dock.hide()
+  })
 }
 
 // app.whenReady().then(createWindow)
