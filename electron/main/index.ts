@@ -173,7 +173,7 @@ ipcMain.on('set-wallpaper', async (_, url: string) => {
 
     if (process.platform === 'darwin') {
       wallpaperWindow.setVisibleOnAllWorkspaces(true, {
-        // 这种方式没闪烁, 但是 win 窗口无法触发 option + command + h 的 hide 效果,并且关掉 win 窗口后只能重新启动应用才能打开 win.
+        // 这种方式没闪烁, 但是 win 窗口无法触发 option + command + h 的 hide 效果,并且触发了类似 app.dock.hide() 的效果
         visibleOnFullScreen: true,
       })
     }
@@ -188,6 +188,9 @@ ipcMain.on('set-wallpaper', async (_, url: string) => {
   // wallpaperWindow.setAlwaysOnTop(true, 'screen-saver')
 
   await wallpaperWindow.loadURL(url)
+  // 手动显示, 抵消 setVisibleOnAllWorkspaces 的副作用, 首次打开时 opt + cmd + h 还是无法 hide win窗口
+  app.dock.show()
+  win.focus()
 })
 
 // New window example arg: new windows url
