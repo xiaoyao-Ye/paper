@@ -3,10 +3,11 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import os from 'node:os'
-
+import Store from 'electron-store'
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+const store = new Store()
 // The built directory structure
 //
 // ├─┬ dist-electron
@@ -39,8 +40,6 @@ if (!app.requestSingleInstanceLock()) {
 let win: BrowserWindow | null = null
 const preload = path.join(__dirname, '../preload/index.mjs')
 const indexHtml = path.join(RENDERER_DIST, 'index.html')
-
-const isAutoLaunch = process.argv.includes('--auto-launch')
 
 async function createWindow() {
   win = new BrowserWindow({
@@ -84,13 +83,19 @@ async function createWindow() {
   })
 }
 
-// app.whenReady().then(createWindow)
-app.whenReady().then(() => {
-  createWindow()
+app.whenReady().then(async () => {
+  const url = store.get(WALLPAPER_URL_KEY)
+  if (url) await setWallpaper(null, url)
 
+  const isAutoLaunch = app.getLoginItemSettings().wasOpenedAtLogin
   if (isAutoLaunch) {
     console.log('应用是通过开机自启动打开的')
-    win?.hide()
+    app.dock.hide()
+    // win?.hide()
+  } else {
+    createWindow()
+    // 手动显示, 抵消 setVisibleOnAllWorkspaces 的副作用, 首次打开时 opt + cmd + h 还是无法 hide win窗口
+    app.dock.show()
   }
 })
 
@@ -108,6 +113,7 @@ app.on('second-instance', () => {
 })
 
 app.on('activate', () => {
+  app.dock.show()
   const allWindows = BrowserWindow.getAllWindows()
   if (allWindows.length) {
     // 找到非 wallpaperWindow 的窗口
@@ -124,11 +130,13 @@ app.on('activate', () => {
 })
 
 let wallpaperWindow: BrowserWindow | null = null
-let currentUrl: string = ''
+let wallpaperUrl: string = ''
+const WALLPAPER_URL_KEY = 'wallpaper-url'
 
 // 添加设置壁纸的函数
-ipcMain.on('set-wallpaper', async (_, url: string) => {
-  if (currentUrl === url) return
+ipcMain.on('set-wallpaper', setWallpaper)
+async function setWallpaper(_, url: string) {
+  if (wallpaperUrl === url) return
   // 获取主屏幕
   const primaryDisplay = screen.getPrimaryDisplay()
   const { width, height, x, y } = primaryDisplay.bounds
@@ -190,11 +198,9 @@ ipcMain.on('set-wallpaper', async (_, url: string) => {
   // wallpaperWindow.setAlwaysOnTop(true, 'screen-saver')
 
   await wallpaperWindow.loadURL(url)
-  currentUrl = url
-  // 手动显示, 抵消 setVisibleOnAllWorkspaces 的副作用, 首次打开时 opt + cmd + h 还是无法 hide win窗口
-  app.dock.show()
-  win.focus()
-})
+  wallpaperUrl = url
+  store.set(WALLPAPER_URL_KEY, url)
+}
 
 // New window example arg: new windows url
 ipcMain.handle('open-win', (_, arg) => {
@@ -216,7 +222,7 @@ ipcMain.handle('open-win', (_, arg) => {
 // 设置开机自动启动
 app.setLoginItemSettings({
   openAtLogin: true,
-  openAsHidden: false,
+  openAsHidden: true,
   path: process.execPath,
   args: ['--auto-launch'],
 })
