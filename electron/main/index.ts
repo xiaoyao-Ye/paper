@@ -131,13 +131,15 @@ app.on('activate', () => {
   }
 })
 
-// 设置开机自动启动
-app.setLoginItemSettings({
-  openAtLogin: true,
-  openAsHidden: true,
-  path: process.execPath,
-  args: ['--auto-launch'],
-})
+if (!VITE_DEV_SERVER_URL) {
+  // 设置开机自动启动
+  app.setLoginItemSettings({
+    openAtLogin: true,
+    openAsHidden: true,
+    path: process.execPath,
+    args: ['--auto-launch'],
+  })
+}
 
 let wallpaperWindow: BrowserWindow | null = null
 let wallpaperCategory: CategoryValue | string = ''
@@ -225,7 +227,7 @@ async function setWallpaper(_, value: CategoryValue | string) {
 
 async function setCategoryWallpaper(value: CategoryValue) {
   if (VITE_DEV_SERVER_URL) {
-    await wallpaperWindow.loadURL(`${VITE_DEV_SERVER_URL}#${value}`)
+    await wallpaperWindow.loadURL(`${VITE_DEV_SERVER_URL}#/${value}`)
     wallpaperWindow.webContents.openDevTools()
   } else {
     await wallpaperWindow.loadFile(indexHtml, { hash: value })

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import ThemeToggle from '@/components/theme/index.vue'
 import { ref } from 'vue'
-import { category, type CategoryValue } from '@/../electron/config'
+import { category, type CategoryValue } from '@/config'
 
 const wallpaperUrl = ref<string>()
 
@@ -40,6 +40,7 @@ function setWallpaper(value: CategoryValue | string) {
     <!-- 主要内容区域 -->
     <main class="container py-6">
       <Button variant="outline" size="sm" @click="setWallpaper(category.ios17Clock)">iOS17 Clock</Button>
+      <Button variant="outline" size="sm" @click="setWallpaper(category.star)">star</Button>
     </main>
   </div>
 </template>

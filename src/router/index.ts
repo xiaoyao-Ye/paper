@@ -1,6 +1,6 @@
+import { category } from '@/config'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-import { category } from '@/../electron/config'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -12,6 +12,11 @@ const routes: RouteRecordRaw[] = [
     path: `/${category.ios17Clock}`,
     name: category.ios17Clock,
     component: () => import('@/background/ios17Clock/index.vue'),
+  },
+  {
+    path: `/${category.star}`,
+    name: category.star,
+    component: () => import('@/background/star/index.vue'),
   },
 ]
 
