@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import os from 'node:os'
 import Store from 'electron-store'
+import { category, type CategoryValue } from '../config/index'
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -40,6 +41,7 @@ if (!app.requestSingleInstanceLock()) {
 let win: BrowserWindow | null = null
 const preload = path.join(__dirname, '../preload/index.mjs')
 const indexHtml = path.join(RENDERER_DIST, 'index.html')
+// const indexHtml = path.join(RENDERER_DIST, 'background.html')
 
 async function createWindow() {
   win = new BrowserWindow({
@@ -84,8 +86,8 @@ async function createWindow() {
 }
 
 app.whenReady().then(async () => {
-  const url = store.get(WALLPAPER_URL_KEY)
-  if (url) await setWallpaper(null, url)
+  const value = store.get(WALLPAPER_CATEGORY_KEY)
+  if (value) await setWallpaper(null, value)
 
   const isAutoLaunch = app.getLoginItemSettings().wasOpenedAtLogin
   if (isAutoLaunch) {
@@ -129,96 +131,6 @@ app.on('activate', () => {
   }
 })
 
-let wallpaperWindow: BrowserWindow | null = null
-let wallpaperUrl: string = ''
-const WALLPAPER_URL_KEY = 'wallpaper-url'
-
-// 添加设置壁纸的函数
-ipcMain.on('set-wallpaper', setWallpaper)
-async function setWallpaper(_, url: string) {
-  if (wallpaperUrl === url) return
-  // 获取主屏幕
-  const primaryDisplay = screen.getPrimaryDisplay()
-  const { width, height, x, y } = primaryDisplay.bounds
-
-  if (!wallpaperWindow) {
-    wallpaperWindow = new BrowserWindow({
-      width,
-      height,
-      x,
-      y,
-      type: 'desktop', // 设置为桌面窗口
-      frame: false, // 无边框
-      transparent: true,
-      titleBarStyle: 'hidden',
-      roundedCorners: false, // 禁用圆角
-      // Windows 下必须配置，而 MacOS 则不需要（否则会打开一个全屏新桌面）
-      fullscreen: process.platform !== 'darwin',
-      // 使覆盖全屏幕，包含 MacOS Menu Bar
-      enableLargerThanScreen: true,
-      // Windows 下必须配置，否则会禁用视频播放
-      // type: 'toolbar',
-      // trafficLightPosition: { x: 999999, y: 999999 }, // 将红绿灯按钮移到看不见的位置
-      // show: false,
-      // resizable: false,
-      // movable: false,
-      // focusable: false,
-      // useContentSize: true,
-      webPreferences: {
-        preload,
-        // webSecurity: false,
-        // nodeIntegration: true,
-        // contextIsolation: false,
-      },
-    })
-
-    // wallpaperWindow.once('ready-to-show', () => {
-    //   console.log('ready-to-show')
-    //   wallpaperWindow.show()
-    // })
-
-    wallpaperWindow.on('closed', () => {
-      wallpaperWindow = null
-    })
-
-    if (process.platform === 'darwin') {
-      wallpaperWindow.setVisibleOnAllWorkspaces(true, {
-        // 这种方式没闪烁, 但是 win 窗口无法触发 option + command + h 的 hide 效果,并且触发了类似 app.dock.hide() 的效果
-        visibleOnFullScreen: true,
-      })
-    }
-    // wallpaperWindow.on('hide', e => {
-    // 这种方式会有闪烁
-    //   wallpaperWindow.showInactive()
-    //   // wallpaperWindow.show()
-    // })
-  }
-  // 使覆盖全屏幕，包含 MacOS Menu (!!!没有退出,退出极其困难, 智能option + command + esc +回车)
-  // 这些属性能能覆盖 mac 菜单栏: pop-up-menu/status/screen-saver
-  // wallpaperWindow.setAlwaysOnTop(true, 'screen-saver')
-
-  await wallpaperWindow.loadURL(url)
-  wallpaperUrl = url
-  store.set(WALLPAPER_URL_KEY, url)
-}
-
-// New window example arg: new windows url
-ipcMain.handle('open-win', (_, arg) => {
-  const childWindow = new BrowserWindow({
-    webPreferences: {
-      preload,
-      nodeIntegration: true,
-      contextIsolation: false,
-    },
-  })
-
-  if (VITE_DEV_SERVER_URL) {
-    childWindow.loadURL(`${VITE_DEV_SERVER_URL}#${arg}`)
-  } else {
-    childWindow.loadFile(indexHtml, { hash: arg })
-  }
-})
-
 // 设置开机自动启动
 app.setLoginItemSettings({
   openAtLogin: true,
@@ -227,16 +139,113 @@ app.setLoginItemSettings({
   args: ['--auto-launch'],
 })
 
-// 对于 macOS，还可以通过 app.getLoginItemSettings() 来判断
-// if (process.platform === 'darwin') {
-//   const loginSettings = app.getLoginItemSettings()
-//   const wasOpenedAtLogin = loginSettings.wasOpenedAtLogin
-//   const wasOpenedAsHidden = loginSettings.wasOpenedAsHidden
+let wallpaperWindow: BrowserWindow | null = null
+let wallpaperCategory: CategoryValue | string = ''
+const WALLPAPER_CATEGORY_KEY = 'wallpaper_category'
 
-//   if (wasOpenedAtLogin) {
-//     console.log('应用是通过开机自启动打开的')
-//     if (wasOpenedAsHidden) {
-//       console.log('并且是以隐藏方式启动的')
-//     }
+function createWallpaperWindow() {
+  // 获取主屏幕
+  const primaryDisplay = screen.getPrimaryDisplay()
+  const { width, height, x, y } = primaryDisplay.bounds
+
+  wallpaperWindow = new BrowserWindow({
+    width,
+    height,
+    x,
+    y,
+    type: 'desktop', // 设置为桌面窗口
+    frame: false, // 无边框
+    transparent: true,
+    titleBarStyle: 'hidden',
+    roundedCorners: false, // 禁用圆角
+    // Windows 下必须配置，而 MacOS 则不需要（否则会打开一个全屏新桌面）
+    fullscreen: process.platform !== 'darwin',
+    // 使覆盖全屏幕，包含 MacOS Menu Bar
+    enableLargerThanScreen: true,
+    // Windows 下必须配置，否则会禁用视频播放
+    // type: 'toolbar',
+    // trafficLightPosition: { x: 999999, y: 999999 }, // 将红绿灯按钮移到看不见的位置
+    // show: false,
+    // resizable: false,
+    // movable: false,
+    // focusable: false,
+    // useContentSize: true,
+    webPreferences: {
+      preload,
+      // webSecurity: false,
+      // nodeIntegration: true,
+      // contextIsolation: false,
+    },
+  })
+
+  // wallpaperWindow.once('ready-to-show', () => {
+  //   console.log('ready-to-show')
+  //   wallpaperWindow.show()
+  // })
+
+  wallpaperWindow.on('closed', () => {
+    wallpaperWindow = null
+  })
+
+  if (process.platform === 'darwin') {
+    wallpaperWindow.setVisibleOnAllWorkspaces(true, {
+      // 这种方式没闪烁, 但是 win 窗口无法触发 option + command + h 的 hide 效果,并且触发了类似 app.dock.hide() 的效果
+      visibleOnFullScreen: true,
+    })
+  }
+  // wallpaperWindow.on('hide', e => {
+  // 这种方式会有闪烁
+  //   wallpaperWindow.showInactive()
+  //   // wallpaperWindow.show()
+  // })
+
+  // 使覆盖全屏幕，包含 MacOS Menu (!!!没有退出,退出极其困难, 智能option + command + esc +回车)
+  // 这些属性能能覆盖 mac 菜单栏: pop-up-menu/status/screen-saver
+  // wallpaperWindow.setAlwaysOnTop(true, 'screen-saver')
+}
+
+function isCategoryValue(value: CategoryValue | string, obj: Record<string, string>): value is CategoryValue {
+  return Object.values(obj).includes(value)
+}
+
+async function setWallpaper(_, value: CategoryValue | string) {
+  if (wallpaperCategory === value) return
+
+  if (!wallpaperWindow) createWallpaperWindow()
+
+  if (isCategoryValue(value, category)) {
+    await setCategoryWallpaper(value)
+  } else {
+    await wallpaperWindow.loadURL(value)
+  }
+
+  wallpaperCategory = value
+  store.set(WALLPAPER_CATEGORY_KEY, value)
+}
+
+async function setCategoryWallpaper(value: CategoryValue) {
+  if (VITE_DEV_SERVER_URL) {
+    await wallpaperWindow.loadURL(`${VITE_DEV_SERVER_URL}#${value}`)
+    wallpaperWindow.webContents.openDevTools()
+  } else {
+    await wallpaperWindow.loadFile(indexHtml, { hash: value })
+  }
+}
+
+ipcMain.on('set-wallpaper', setWallpaper)
+// New window example arg: new windows url
+// ipcMain.handle('open-win', (_, arg) => {
+//   const childWindow = new BrowserWindow({
+//     webPreferences: {
+//       preload,
+//       nodeIntegration: true,
+//       contextIsolation: false,
+//     },
+//   })
+
+//   if (VITE_DEV_SERVER_URL) {
+//     childWindow.loadURL(`${VITE_DEV_SERVER_URL}#${arg}`)
+//   } else {
+//     childWindow.loadFile(indexHtml, { hash: arg })
 //   }
-// }
+// })

@@ -1,11 +1,11 @@
 import fs from 'node:fs'
+import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
-import { fileURLToPath, URL } from 'node:url'
+import { URL } from 'node:url'
 import autoprefixer from 'autoprefixer'
 import tailwind from 'tailwindcss'
 import vue from '@vitejs/plugin-vue'
 import electron from 'vite-plugin-electron/simple'
-import renderer from 'vite-plugin-electron-renderer'
 import pkg from './package.json'
 
 // https://vitejs.dev/config/
@@ -24,7 +24,7 @@ export default defineConfig(({ command }) => {
     },
     resolve: {
       alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url)),
+        '@': resolve(__dirname, 'src'),
       },
     },
     plugins: [
@@ -73,17 +73,8 @@ export default defineConfig(({ command }) => {
         // Ployfill the Electron and Node.js API for Renderer process.
         // If you want use Node.js in Renderer process, the `nodeIntegration` needs to be enabled in the Main process.
         // See 👉 https://github.com/electron-vite/vite-plugin-electron-renderer
-        renderer: {
-          // resolve: {
-          //   got: { type: 'esm' },
-          // },
-        },
+        renderer: {},
       }),
-      // renderer({
-      //   resolve: {
-      //     got: { type: 'cjs' },
-      //   },
-      // }),
     ],
     server:
       process.env.VSCODE_DEBUG &&

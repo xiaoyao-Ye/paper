@@ -2,22 +2,19 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import ThemeToggle from '@/components/theme/index.vue'
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
+import { category, type CategoryValue } from '@/../electron/config'
 
-// const WALLPAPER_URL_KEY = 'wallpaper-url'
-const wallpaperUrl = ref('https://xiaoyao-ye.github.io/ios17-clock/')
+const wallpaperUrl = ref<string>()
 
-const handleSetWallpaper = async () => {
+function handleSetWallpaper() {
   if (!wallpaperUrl.value) return alert('请输入壁纸URL')
 
-  window.ipcRenderer.send('set-wallpaper', wallpaperUrl.value)
-  // localStorage.setItem(WALLPAPER_URL_KEY, wallpaperUrl.value)
+  setWallpaper(wallpaperUrl.value)
 }
-
-// onMounted(() => {
-//   const savedUrl = localStorage.getItem(WALLPAPER_URL_KEY)
-//   if (savedUrl) window.ipcRenderer.send('set-wallpaper', savedUrl)
-// })
+function setWallpaper(value: CategoryValue | string) {
+  window.ipcRenderer.send('set-wallpaper', value)
+}
 </script>
 
 <template>
@@ -32,8 +29,8 @@ const handleSetWallpaper = async () => {
 
           <!-- 右侧操作按钮 -->
           <div class="flex items-center space-x-2">
-            <Button variant="outline" size="sm">刷新</Button>
-            <Button variant="outline" size="sm">设置</Button>
+            <!-- <Button variant="outline" size="sm">刷新</Button> -->
+            <!-- <Button variant="outline" size="sm">设置</Button> -->
             <ThemeToggle />
           </div>
         </div>
@@ -42,9 +39,7 @@ const handleSetWallpaper = async () => {
 
     <!-- 主要内容区域 -->
     <main class="container py-6">
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <slot></slot>
-      </div>
+      <Button variant="outline" size="sm" @click="setWallpaper(category.ios17Clock)">iOS17 Clock</Button>
     </main>
   </div>
 </template>
