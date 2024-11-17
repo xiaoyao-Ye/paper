@@ -204,6 +204,14 @@ function createWallpaperWindow() {
   // 使覆盖全屏幕，包含 MacOS Menu (!!!没有退出,退出极其困难, 智能option + command + esc +回车)
   // 这些属性能能覆盖 mac 菜单栏: pop-up-menu/status/screen-saver
   // wallpaperWindow.setAlwaysOnTop(true, 'screen-saver')
+
+  screen.on('display-metrics-changed', () => {
+    const { width, height, x, y } = screen.getPrimaryDisplay().bounds
+    const { width: w, height: h } = wallpaperWindow.getBounds()
+    if (width === w && height === h) return
+    wallpaperWindow.setSize(width, height, true)
+    wallpaperWindow.setPosition(x, y, true)
+  })
 }
 
 function isCategoryValue(value: CategoryValue | string, obj: Record<string, string>): value is CategoryValue {
