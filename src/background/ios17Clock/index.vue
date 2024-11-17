@@ -106,4 +106,8 @@ html {
   /* font-family: "Pacifico", cursive !important; */
   font-family: 'Lilita One', cursive !important;
 }
+
+body {
+  overflow: hidden;
+}
 </style>
