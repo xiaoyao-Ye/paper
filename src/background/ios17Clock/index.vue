@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { padStart, getRandom } from '@/utils'
 import { onMounted, onUnmounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import Num from './Num.vue'
 
 const GitHub = '_Ghosteye'
@@ -76,10 +77,11 @@ onUnmounted(() => {
 const rotate = ref(getRandom(-12, 12))
 const pointStyle = `transform: rotate(${rotate}deg); transition: all 3s ease;color:rgba(255, 255, 255, 0.6);text-shadow:0px 0px 9px rgba(255, 255, 255, 0.6),0px 0px 9px rgba(255, 255, 255, 0.6);z-index: 1;padding-bottom: 80px;`
 const colors = ['color: rgba(81,241,177,0.6)', 'color: rgba(135,255,161,0.8)']
+const bg = (useRoute().query.bg as string) || 'bg-black'
 </script>
 
 <template>
-  <div class="h-screen overflow-hidden bg-black">
+  <div class="h-screen overflow-hidden" :class="bg">
     <div class="flex items-center justify-center w-full h-full overflow-hidden text-[3.5rem]">
       <Num :num="timeList[0]" :delay="delayList[0]" :style="colors[0]" />
       <Num :num="timeList[1]" :delay="delayList[1]" :style="colors[1]" />

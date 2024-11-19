@@ -15,6 +15,10 @@ function handleSetWallpaper() {
 function setWallpaper(value: CategoryValue | string) {
   window.ipcRenderer.send('set-wallpaper', value)
 }
+function setComponent(value: CategoryValue | string) {
+  const query = { bg: 'transparent' }
+  window.ipcRenderer.send('set-component', value, query)
+}
 </script>
 
 <template>
@@ -41,6 +45,9 @@ function setWallpaper(value: CategoryValue | string) {
     <main class="container py-6">
       <Button variant="outline" size="sm" @click="setWallpaper(category.ios17Clock)">iOS17 Clock</Button>
       <Button variant="outline" size="sm" @click="setWallpaper(category.star)">star</Button>
+    </main>
+    <main class="container py-6 border-t">
+      <Button variant="outline" size="sm" @click="setComponent(category.ios17Clock)">iOS17 Clock</Button>
     </main>
   </div>
 </template>
