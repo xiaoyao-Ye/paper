@@ -72,15 +72,15 @@ async function createWindow() {
   }
 
   // Test actively push message to the Electron-Renderer
-  win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('main-process-message', new Date().toLocaleString())
-  })
+  // win.webContents.on('did-finish-load', () => {
+  //   win?.webContents.send('main-process-message', new Date().toLocaleString())
+  // })
 
   // Make all links open with the browser, not with the application
-  win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('https:')) shell.openExternal(url)
-    return { action: 'deny' }
-  })
+  // win.webContents.setWindowOpenHandler(({ url }) => {
+  //   if (url.startsWith('https:')) shell.openExternal(url)
+  //   return { action: 'deny' }
+  // })
   // win.webContents.on('will-navigate', (event, url) => { }) #344
 
   win.on('closed', () => {
@@ -136,6 +136,8 @@ app.on('activate', () => {
   } else {
     createWindow()
   }
+  // if (!allWindows.length) return createWindow()
+  // win ? win.focus() : createWindow() // 会主进程错误
 })
 
 if (!VITE_DEV_SERVER_URL) {

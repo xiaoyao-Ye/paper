@@ -76,7 +76,9 @@ onUnmounted(() => {
 
 const rotate = ref(getRandom(-12, 12))
 const pointStyle = `transform: rotate(${rotate}deg); transition: all 3s ease;color:rgba(255, 255, 255, 0.6);text-shadow:0px 0px 9px rgba(255, 255, 255, 0.6),0px 0px 9px rgba(255, 255, 255, 0.6);z-index: 1;padding-bottom: 80px;`
-const colors = ['color: rgba(81,241,177,0.6)', 'color: rgba(135,255,161,0.8)']
+const colors = ['color: rgba(70,224,162,0.6)', 'color: rgba(126,246,153,0.9)']
+// const colors = ['color: rgba(46,150,108,0.9)', 'color: rgba(126,246,153,0.9)']
+// const colors = ['color: rgba(81,241,177,0.6)', 'color: rgba(135,255,161,0.8)'] // origin
 const bg = (useRoute().query.bg as string) || 'bg-black'
 </script>
 
