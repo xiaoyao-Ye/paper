@@ -364,9 +364,11 @@ async function setCategoryComponent(value: CategoryValue, query: Record<string, 
   const hash = `${value}?${qs.stringify(query)}`
   if (VITE_DEV_SERVER_URL) {
     await componentWindow.loadURL(`${VITE_DEV_SERVER_URL}#/${hash}`)
+    componentWindow.webContents.reload()
     componentWindow.webContents.openDevTools()
   } else {
     await componentWindow.loadFile(indexHtml, { hash })
+    componentWindow.webContents.reload()
     // await componentWindow.loadFile(indexHtml, { hash: value, query }) // electron 会将 hash 拼接到 query 后面
   }
 }

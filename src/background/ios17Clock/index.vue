@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { padStart, getRandom } from '@/utils'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import Num from './Num.vue'
 
@@ -79,7 +79,7 @@ const pointStyle = `transform: rotate(${rotate}deg); transition: all 3s ease;col
 const colors = ['color: rgba(70,224,162,0.6)', 'color: rgba(126,246,153,0.9)']
 // const colors = ['color: rgba(46,150,108,0.9)', 'color: rgba(126,246,153,0.9)']
 // const colors = ['color: rgba(81,241,177,0.6)', 'color: rgba(135,255,161,0.8)'] // origin
-const bg = (useRoute().query.bg as string) || 'bg-black'
+const bg = useRoute().query.bg || 'bg-black'
 </script>
 
 <template>
