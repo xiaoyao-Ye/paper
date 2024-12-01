@@ -18,6 +18,11 @@ const routes: RouteRecordRaw[] = [
     name: category.star,
     component: () => import('@/background/star/index.vue'),
   },
+  {
+    path: `/${category.solar}`,
+    name: category.solar,
+    component: () => import('@/background/solar/index.vue'),
+  },
 ]
 
 const router = createRouter({

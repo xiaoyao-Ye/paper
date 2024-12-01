@@ -390,3 +390,7 @@ ipcMain.on('set-component', setComponent)
 //     childWindow.loadFile(indexHtml, { hash: arg })
 //   }
 // })
+
+ipcMain.on('event', (_, ...args) => {
+  wallpaperWindow.webContents.send('event', ...args)
+})

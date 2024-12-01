@@ -55,6 +55,7 @@ function setComponent(value: CategoryValue | string) {
           <div class="grid grid-cols-4 gap-4 py-2">
             <Button variant="outline" @click="setWallpaper(category.ios17Clock)">iOS17 Clock</Button>
             <Button variant="outline" @click="setWallpaper(category.star)">Star</Button>
+            <Button variant="outline" @click="setWallpaper(category.solar)">Solar</Button>
           </div>
           <Label>自定义壁纸</Label>
           <div class="flex items-center space-x-2">
