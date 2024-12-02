@@ -3,11 +3,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardFooter, CardHeader } from '@/components/ui/card'
 import ThemeToggle from '@/components/theme/index.vue'
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { category, type CategoryValue } from '@/config'
 
-const wallpaperUrl = ref<string>()
+const wallpaperUrl = ref<string>('')
+const wallpaperList = ref<string[]>(['ios17Clock', 'star', 'solar'])
+const baseURL = window.location.href
 
 const componentConfig = reactive({
   // position: 'top-right',
@@ -15,10 +18,13 @@ const componentConfig = reactive({
   // customBG: '',
 })
 
-function handleSetWallpaper() {
-  if (!wallpaperUrl.value) return alert('请输入壁纸URL')
-  setWallpaper(wallpaperUrl.value)
+function isUrl(str: string) {
+  return str.startsWith('http') || str.startsWith('file')
 }
+
+const previewList = computed(() => {
+  return wallpaperList.value.map(w => (isUrl(w) ? w : baseURL + w))
+})
 
 function setWallpaper(value: CategoryValue | string) {
   window.ipcRenderer.send('set-wallpaper', value)
@@ -27,6 +33,16 @@ function setWallpaper(value: CategoryValue | string) {
 function setComponent(value: CategoryValue | string) {
   const query = { ...componentConfig }
   window.ipcRenderer.send('set-component', value, query)
+}
+
+function addWallpaper() {
+  if (!wallpaperUrl.value) return alert('请输入URL')
+  wallpaperList.value.unshift(wallpaperUrl.value)
+  wallpaperUrl.value = ''
+}
+
+function removeWallpaper(index: number) {
+  wallpaperList.value.splice(index, 1)
 }
 </script>
 
@@ -51,16 +67,28 @@ function setComponent(value: CategoryValue | string) {
 
         <!-- 壁纸设置页签 -->
         <TabsContent value="wallpaper">
-          <Label>选择预设壁纸</Label>
-          <div class="grid grid-cols-4 gap-4 py-2">
-            <Button variant="outline" @click="setWallpaper(category.ios17Clock)">iOS17 Clock</Button>
-            <Button variant="outline" @click="setWallpaper(category.star)">Star</Button>
-            <Button variant="outline" @click="setWallpaper(category.solar)">Solar</Button>
+          <Label>添加自定义壁纸</Label>
+          <div class="flex items-center py-2 space-x-2">
+            <Input v-model="wallpaperUrl" placeholder="输入网页URL" class="w-[300px]" />
+            <Button variant="outline" size="sm" @click="addWallpaper">添加</Button>
           </div>
-          <Label>自定义壁纸</Label>
-          <div class="flex items-center space-x-2">
-            <Input v-model="wallpaperUrl" placeholder="输入壁纸URL" class="w-[300px]" type="url" />
-            <Button variant="outline" size="sm" @click="handleSetWallpaper">设置壁纸</Button>
+
+          <!-- 卡片列表 -->
+          <div>
+            <Label>预览列表</Label>
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 mt-4">
+              <Card v-for="(url, index) in previewList" :key="url" class="overflow-hidden">
+                <CardHeader class="p-0">
+                  <div class="relative w-full aspect-video">
+                    <iframe :src="url" class="absolute inset-0 w-full h-full" loading="lazy"></iframe>
+                  </div>
+                </CardHeader>
+                <CardFooter class="flex justify-between p-2 space-x-2">
+                  <Button variant="ghost" size="sm" @click="setWallpaper(wallpaperList[index])">设为壁纸</Button>
+                  <!-- <Button variant="ghost" size="sm" @click="removeWallpaper(index)">删除</Button> -->
+                </CardFooter>
+              </Card>
+            </div>
           </div>
         </TabsContent>
 

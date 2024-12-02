@@ -1,12 +1,10 @@
-import { app, BrowserWindow, shell, ipcMain, screen, Menu } from 'electron'
-import { createRequire } from 'node:module'
+import { app, BrowserWindow, ipcMain, screen, Menu } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import os from 'node:os'
 import qs from 'qs'
 import Store from 'electron-store'
 import { category, type CategoryValue } from '../config/index'
-const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const store = new Store()
@@ -39,7 +37,7 @@ if (!app.requestSingleInstanceLock()) {
   process.exit(0)
 }
 
-Menu.setApplicationMenu(null)
+// Menu.setApplicationMenu(null)
 
 let win: BrowserWindow | null = null
 const preload = path.join(__dirname, '../preload/index.mjs')
@@ -48,7 +46,7 @@ const indexHtml = path.join(RENDERER_DIST, 'index.html')
 
 async function createWindow() {
   win = new BrowserWindow({
-    title: 'Main window',
+    title: 'wallpaper',
     icon: path.join(process.env.VITE_PUBLIC, 'logo_1024.png'),
     webPreferences: {
       preload,

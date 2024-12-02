@@ -74,6 +74,22 @@
   }
   body {
     @apply text-foreground;
-    /* @apply bg-background text-foreground; */
   }
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+  background-color: #eee;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 2em;
+  background-color: #ddd;
+}
+
+.dark ::-webkit-scrollbar {
+  background-color: #222;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #333;
 }
