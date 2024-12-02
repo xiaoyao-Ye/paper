@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
-import { RandomXiaoxingxing, RandomStarBG, RandomPosition, planetStyle } from './index'
+import { CreateMeteoriteBelt, CreateStarBG, RandomPosition, planetStyle, starBG, meteoriteBelt } from './index'
 
 const events = {
   RandomPosition: RandomPosition,
@@ -10,22 +10,21 @@ ipcRenderer.on('event', (_, fn, ...args) => {
 })
 
 onMounted(() => {
-  RandomXiaoxingxing(2400)
-  RandomStarBG()
+  CreateMeteoriteBelt(2400)
+  CreateStarBG()
   RandomPosition()
 
-  window.addEventListener('resize', RandomPosition)
+  window.addEventListener('resize', CreateStarBG)
 })
 onUnmounted(() => {
-  window.removeEventListener('resize', RandomPosition)
+  window.removeEventListener('resize', CreateStarBG)
 })
 </script>
 
 <template>
   <div>
-    <!-- 太阳系系统 -->
     <div class="solar">
-      <div class="star-bg" />
+      <div class="star-bg" :style="starBG" />
 
       <div class="sun" />
       <div class="mercury-orbit" />
@@ -38,8 +37,8 @@ onUnmounted(() => {
       </div>
       <div class="mars-orbit" />
       <div class="mars" :style="planetStyle.mars"></div>
-      <div class="xiaoxingxingdai" />
-      <div class="xiaoxingxing" />
+      <div class="meteorite-belt-wrap" />
+      <div class="meteorite-belt" :style="meteoriteBelt" />
       <div class="jupiter-orbit" />
       <div class="jupiter" :style="planetStyle.jupiter"></div>
       <div class="saturn-orbit" />
@@ -72,11 +71,9 @@ body {
   top: 0;
   left: 0;
   z-index: -1;
-  /* position: relative; */
   width: 100vw;
   height: 100vh;
   margin: 0 auto;
-  /* background-color: rgb(34, 39, 56); */
   transition: 1s linear;
 }
 
@@ -99,73 +96,56 @@ body {
   border-radius: 50%;
   top: 50%;
   left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .mercury-orbit {
   height: calc(90px - 1px);
   width: calc(90px - 1px);
-  margin-top: -45px;
-  margin-left: -45px;
 }
 
 .venus-orbit {
   height: calc(120px - 1px);
   width: calc(120px - 1px);
-  margin-top: -60px;
-  margin-left: -60px;
 }
 
 .earth-orbit {
   height: calc(180px - 1px);
   width: calc(180px - 1px);
-  margin-top: -90px;
-  margin-left: -90px;
 }
 
 .mars-orbit {
   height: calc(240px - 1px);
   width: calc(240px - 1px);
-  margin-top: -120px;
-  margin-left: -120px;
 }
 
 .jupiter-orbit {
   height: calc(380px - 1px);
   width: calc(380px - 1px);
-  margin-top: -190px;
-  margin-left: -190px;
 }
-
 .saturn-orbit {
   height: calc(480px - 1px);
   width: calc(480px - 1px);
-  margin-top: -240px;
-  margin-left: -240px;
 }
 
 .uranus-orbit {
   height: calc(580px - 1px);
   width: calc(580px - 1px);
-  margin-top: -290px;
-  margin-left: -290px;
 }
 
 .neptune-orbit {
   height: calc(680px - 1px);
   width: calc(680px - 1px);
-  margin-top: -340px;
-  margin-left: -340px;
 }
 
-/*小行星带*/
-.xiaoxingxingdai,
-.xiaoxingxing {
+.meteorite-belt-wrap,
+.meteorite-belt {
   position: absolute;
   top: 50%;
   left: 50%;
 }
 
-.xiaoxingxingdai {
+.meteorite-belt-wrap {
   box-sizing: border-box;
   height: calc(330px - 1px);
   width: calc(330px - 1px);
@@ -180,10 +160,9 @@ body {
     rgba(255, 255, 255, 0.01) 70%,
     transparent 70%
   );
-  animation: rotate 48s infinite linear;
 }
 
-.xiaoxingxing {
+.meteorite-belt {
   border-radius: 50%;
   width: 280px;
   height: 280px;
@@ -316,23 +295,21 @@ body {
   left: calc((24px - 48px) / 2);
   width: 48px;
   height: 48px;
-  /* animation: rotate 0.021s infinite linear; */
   background: radial-gradient(transparent 35%, #bf9b4f 52%, #648d90 58%, transparent 70%);
 }
 
-@keyframes rotate {
-  100% {
-    transform: rotate(-360deg);
-  }
-}
-
-/*背景星星*/
 .star-bg {
   height: 1px;
   width: 1px;
   background-color: transparent;
   z-index: 1000;
   animation: toTop 36s infinite linear;
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(-360deg);
+  }
 }
 
 @keyframes toTop {
