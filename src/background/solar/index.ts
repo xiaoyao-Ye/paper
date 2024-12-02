@@ -4,30 +4,12 @@ const meteoriteBelt = ref('')
 function CreateMeteoriteBelt(num: number) {
   let shadow = ''
   for (let i = num; i >= 0; i--) {
-    const j = Math.round(Math.random() * 360) - 180
-    const k = Math.round(Math.random() * 360) - 180
-    const l = Math.random() * 0.52
-    if (j * j + k * k <= 160 * 160) shadow += `${j}px ${k}px 0 -139px rgba(255,255,255,${l}),`
+    const x = Math.round(Math.random() * 360) - 180
+    const y = Math.round(Math.random() * 360) - 180
+    const o = Math.random() * 0.52
+    if (x * x + y * y <= 160 * 160) shadow += `${x}px ${y}px 0 -139px rgba(255,255,255,${o}),`
   }
-  meteoriteBelt.value = shadow.substring(0, shadow.length - 1)
-}
-
-const starBG = ref('')
-function CreateStarBG(num: number = 240) {
-  const windowHeight = document.body.clientHeight
-  const windowWidth = document.body.clientWidth
-  let shadow = ''
-  for (let i = num; i >= 0; i--) {
-    const j = Math.round(Math.random() * windowWidth)
-    const k = Math.round(Math.random() * windowHeight)
-    const n = Math.round(Math.random() * 0.52)
-    const l = Math.random() * 0.5
-    for (let m = 0; m < 2; m++) {
-      shadow += `${j}px ${k}px 0 ${n}px rgba(255,255,255,${l}),`
-      shadow += `${j}px ${windowHeight + k}px 0 ${n}px rgba(255,255,255,${l}),`
-    }
-  }
-  starBG.value = shadow.substring(0, shadow.length - 1)
+  meteoriteBelt.value = shadow.slice(0, -1)
 }
 
 const planetStyle = reactive<Record<string, string>>({})
@@ -51,4 +33,4 @@ function RandomPosition() {
   })
 }
 
-export { CreateMeteoriteBelt, CreateStarBG, RandomPosition, planetStyle, starBG, meteoriteBelt }
+export { CreateMeteoriteBelt, RandomPosition, planetStyle, meteoriteBelt }

@@ -1,6 +1,7 @@
 <script setup>
-import { onMounted, onUnmounted, watchEffect } from 'vue'
-import { CreateMeteoriteBelt, CreateStarBG, RandomPosition, planetStyle, starBG, meteoriteBelt } from './index'
+import { onMounted } from 'vue'
+import { CreateMeteoriteBelt, RandomPosition, planetStyle, meteoriteBelt } from './index'
+import Star from '../star/index.vue'
 
 const events = {
   RandomPosition: RandomPosition,
@@ -11,20 +12,14 @@ ipcRenderer.on('event', (_, fn, ...args) => {
 
 onMounted(() => {
   CreateMeteoriteBelt(2400)
-  CreateStarBG()
   RandomPosition()
-
-  window.addEventListener('resize', CreateStarBG)
-})
-onUnmounted(() => {
-  window.removeEventListener('resize', CreateStarBG)
 })
 </script>
 
 <template>
   <div class="bg-[#1e1e20] h-screen">
     <div class="solar">
-      <div class="star-bg" :style="`box-shadow: ${starBG}`" />
+      <Star />
 
       <div class="sun" />
       <div class="mercury-orbit" />
@@ -285,27 +280,9 @@ onUnmounted(() => {
   background: radial-gradient(transparent 35%, #bf9b4f 52%, #648d90 58%, transparent 70%);
 }
 
-.star-bg {
-  height: 1px;
-  width: 1px;
-  background-color: transparent;
-  z-index: 1000;
-  animation: toTop 36s infinite linear;
-}
-
 @keyframes rotate {
   100% {
     transform: rotate(-360deg);
-  }
-}
-
-@keyframes toTop {
-  0% {
-    transform: translateY(0);
-  }
-
-  100% {
-    transform: translateY(-100vh);
   }
 }
 </style>

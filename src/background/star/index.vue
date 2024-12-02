@@ -1,36 +1,48 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 
+interface Props {
+  num?: number
+  colors?: string[]
+  showOpacity?: boolean
+}
+const props = withDefaults(defineProps<Props>(), { num: 240, showOpacity: false })
+
+const defaultColors = [
+  '255, 255, 255', // 白色
+  '161, 198, 231', // 淡蓝色
+  '234, 184, 228', // 淡紫色
+  '255, 215, 0', // 金色
+  '178, 226, 177', // 淡绿色
+  '255, 111, 97', // 珊瑚红
+]
 const boxShadow = ref('')
-function RandomStars(num: number) {
+function RandomStars(num: number = props.num) {
   const windowHeight = window.innerHeight
   const windowWidth = window.innerWidth
   let stars = ''
-  const colors = ['#fff', '#A1C6E7', '#EAB8E4', '#FFD700', '#B2E2B1', '#FF6F61']
+  const colors = props.colors || defaultColors
   for (let i = num; i >= 0; i--) {
-    /* X轴坐标 */
     const x = Math.round(Math.random() * windowWidth)
-    /* Y轴坐标 */
     const y = Math.round(Math.random() * windowHeight)
-    /* 阴影大小 */
     const size = Math.round(Math.random() * 0.52)
-    /* 随机透明度 */
-    // let o = Math.random() * 0.5
-    /* 添加阴影 */
-    const index = Math.floor(Math.random() * 6)
+    const o = props.showOpacity ? Math.random() * 0.5 : 1
+    const index = Math.floor(Math.random() * colors.length)
 
-    // stars += `${x}px ${y}px 0 ${size}px var(${colors[index]}),`
-    // stars += `${x}px ${windowHeight + y}px 0 ${size}px var(${colors[index]}),`
-    stars += `${x}px ${y}px 0 ${size}px ${colors[index]},`
-    stars += `${x}px ${windowHeight + y}px 0 ${size}px ${colors[index]},`
+    stars += `${x}px ${y}px 0 ${size}px rgba(${colors[index]}, ${o}),`
+    stars += `${x}px ${windowHeight + y}px 0 ${size}px rgba(${colors[index]}, ${o}),`
   }
-  /* 截掉最后多余的逗号 */
-  stars = stars.slice(0, stars.length - 1)
-  /* 添加到页面 */
+  stars = stars.slice(0, -1)
   boxShadow.value = stars
 }
+
+const handleResize = () => RandomStars()
 onMounted(() => {
-  RandomStars(240)
+  RandomStars()
+  window.addEventListener('resize', handleResize)
+})
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 
