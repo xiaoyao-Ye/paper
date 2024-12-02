@@ -6,13 +6,14 @@ import Star from '../star/index.vue'
 const events = {
   RandomPosition: RandomPosition,
 }
-ipcRenderer.on('event', (_, fn, ...args) => {
-  events[fn](...args)
-})
 
 onMounted(() => {
   CreateMeteoriteBelt(2400)
   RandomPosition()
+
+  window.ipcRenderer?.on('event', (_, fn, ...args) => {
+    events[fn](...args)
+  })
 })
 </script>
 
