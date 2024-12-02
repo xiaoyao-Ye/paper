@@ -1,31 +1,33 @@
 import { reactive, ref } from 'vue'
 
-const meteoriteBelt = ref('box-shadow: ')
+const meteoriteBelt = ref('')
 function CreateMeteoriteBelt(num: number) {
+  let shadow = ''
   for (let i = num; i >= 0; i--) {
     const j = Math.round(Math.random() * 360) - 180
     const k = Math.round(Math.random() * 360) - 180
     const l = Math.random() * 0.52
-    if (j * j + k * k <= 160 * 160) meteoriteBelt.value += `${j}px ${k}px 0 -139px rgba(255,255,255,${l}),`
+    if (j * j + k * k <= 160 * 160) shadow += `${j}px ${k}px 0 -139px rgba(255,255,255,${l}),`
   }
-  meteoriteBelt.value = meteoriteBelt.value.substring(0, meteoriteBelt.value.length - 1)
+  meteoriteBelt.value = shadow.substring(0, shadow.length - 1)
 }
 
-const starBG = ref('box-shadow: ')
+const starBG = ref('')
 function CreateStarBG(num: number = 240) {
   const windowHeight = document.body.clientHeight
   const windowWidth = document.body.clientWidth
+  let shadow = ''
   for (let i = num; i >= 0; i--) {
     const j = Math.round(Math.random() * windowWidth)
     const k = Math.round(Math.random() * windowHeight)
     const n = Math.round(Math.random() * 0.52)
     const l = Math.random() * 0.5
     for (let m = 0; m < 2; m++) {
-      starBG.value += `${j}px ${k}px 0 ${n}px rgba(255,255,255,${l}),`
-      starBG.value += `${j}px ${windowHeight + k}px 0 ${n}px rgba(255,255,255,${l}),`
+      shadow += `${j}px ${k}px 0 ${n}px rgba(255,255,255,${l}),`
+      shadow += `${j}px ${windowHeight + k}px 0 ${n}px rgba(255,255,255,${l}),`
     }
   }
-  starBG.value = starBG.value.substring(0, starBG.value.length - 1)
+  starBG.value = shadow.substring(0, shadow.length - 1)
 }
 
 const planetStyle = reactive<Record<string, string>>({})

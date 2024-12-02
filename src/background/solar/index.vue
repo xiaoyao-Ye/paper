@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, watchEffect } from 'vue'
 import { CreateMeteoriteBelt, CreateStarBG, RandomPosition, planetStyle, starBG, meteoriteBelt } from './index'
 
 const events = {
@@ -22,9 +22,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="bg-[#1e1e20] h-screen">
     <div class="solar">
-      <div class="star-bg" :style="starBG" />
+      <div class="star-bg" :style="`box-shadow: ${starBG}`" />
 
       <div class="sun" />
       <div class="mercury-orbit" />
@@ -38,7 +38,7 @@ onUnmounted(() => {
       <div class="mars-orbit" />
       <div class="mars" :style="planetStyle.mars"></div>
       <div class="meteorite-belt-wrap" />
-      <div class="meteorite-belt" :style="meteoriteBelt" />
+      <div class="meteorite-belt" :style="`box-shadow: ${meteoriteBelt}`" />
       <div class="jupiter-orbit" />
       <div class="jupiter" :style="planetStyle.jupiter"></div>
       <div class="saturn-orbit" />
@@ -53,24 +53,11 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style>
-html,
-body {
-  margin: 0;
-  height: 100%;
-  width: 100%;
-}
-
-body {
-  background-color: rgb(30, 30, 32);
-  transition: 1s linear;
-}
-
+<style scoped>
 .solar {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: -1;
   width: 100vw;
   height: 100vh;
   margin: 0 auto;
