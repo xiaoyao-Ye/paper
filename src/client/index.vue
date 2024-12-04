@@ -94,6 +94,8 @@ function removeWallpaper(index: number) {
 
         <!-- 组件设置页签 -->
         <TabsContent value="components">
+          <Button size="sm" @click="setComponent(category.calendar)">日历</Button>
+
           <div>
             <Label>iOS17 时钟组件</Label>
 

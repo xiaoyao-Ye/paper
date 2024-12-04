@@ -23,6 +23,11 @@ const routes: RouteRecordRaw[] = [
     name: category.solar,
     component: () => import('@/background/solar/index.vue'),
   },
+  {
+    path: `/${category.calendar}`,
+    name: category.calendar,
+    component: () => import('@/background/calendar/index.vue'),
+  },
 ]
 
 const router = createRouter({
