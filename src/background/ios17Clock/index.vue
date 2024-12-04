@@ -56,9 +56,10 @@ calculateFontSize()
 
 // 添加页面可见性处理
 function handleVisibilityChange() {
-  if (document.visibilityState === 'visible') {
-    // 页面变为可见时，立即更新时钟
+  if (document.visibilityState === 'hidden') {
     clearTimeout(timeID.value)
+  }
+  if (document.visibilityState === 'visible') {
     updateClock()
   }
 }

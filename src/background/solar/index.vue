@@ -1,6 +1,7 @@
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { CreateMeteoriteBelt, RandomPosition, planetStyle, meteoriteBelt } from './index'
+import { handleVisibilityChange } from '@/utils'
 import Star from '../star/index.vue'
 
 const events = {
@@ -14,6 +15,10 @@ onMounted(() => {
   window.ipcRenderer?.on('event', (_, fn, ...args) => {
     events[fn](...args)
   })
+  window.addEventListener('visibilitychange', handleVisibilityChange)
+})
+onUnmounted(() => {
+  window.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 </script>
 

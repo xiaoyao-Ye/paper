@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { handleVisibilityChange } from '@/utils'
 import { onMounted, onUnmounted, ref } from 'vue'
 
 interface Props {
@@ -40,9 +41,11 @@ const handleResize = () => RandomStars()
 onMounted(() => {
   RandomStars()
   window.addEventListener('resize', handleResize)
+  window.addEventListener('visibilitychange', handleVisibilityChange)
 })
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  window.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 </script>
 
