@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-end px-8 pt-12 text-gray-100 wrap">
+  <div class="flex justify-end px-8 pt-12 text-gray-100 wrap" :key="key">
     <CalendarRoot v-slot="{ date, grid, weekDays }" weekday-format="short" :locale="locale">
       <CalendarHeader>
         <CalendarHeading class="px-2 pb-2 text-md" v-slot="{ headingValue }">
@@ -50,7 +50,7 @@ import {
   CalendarHeader,
   CalendarHeading,
 } from '@/components/ui/calendar'
-import { ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 
 const locale = ref('en')
 // const locale = ref('zh')
@@ -71,6 +71,32 @@ function isCurrentMonth(date: string) {
   const month = +date.slice(5, 7)
   return currentMonth === month
 }
+
+const key = ref(Date.now())
+function handleVisibilityChange() {
+  if (document.visibilityState === 'visible') {
+    key.value = Date.now()
+    updateDate()
+  }
+}
+let timeID: NodeJS.Timeout
+function updateDate() {
+  clearTimeout(timeID)
+  const date = new Date()
+  const nextMinute = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1)
+  const timeDifference = nextMinute.getTime() - date.getTime()
+  timeID = setTimeout(() => {
+    key.value = Date.now()
+  }, timeDifference)
+}
+onMounted(() => {
+  updateDate()
+  window.addEventListener('visibilitychange', handleVisibilityChange)
+})
+onUnmounted(() => {
+  clearTimeout(timeID)
+  window.removeEventListener('visibilitychange', handleVisibilityChange)
+})
 </script>
 
 <style scoped>
