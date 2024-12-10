@@ -11,7 +11,7 @@
   mac: {
     target: ['dmg'],
     artifactName: '${productName}-Mac-${version}-Installer.${ext}',
-    icon: './public/logo_1024.icns',
+    icon: './public/logo.icns',
   },
   win: {
     target: [
@@ -21,7 +21,7 @@
       },
     ],
     artifactName: '${productName}-Windows-${version}-Setup.${ext}',
-    icon: './public/logo_1024.png',
+    icon: './public/logo.png',
   },
   nsis: {
     oneClick: false,

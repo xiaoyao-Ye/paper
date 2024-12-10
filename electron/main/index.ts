@@ -44,7 +44,7 @@ const indexHtml = path.join(RENDERER_DIST, 'index.html')
 async function createWindow() {
   win = new BrowserWindow({
     title: 'wallpaper',
-    icon: path.join(process.env.VITE_PUBLIC, 'logo_1024.png'),
+    icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
     webPreferences: {
       preload,
     },
