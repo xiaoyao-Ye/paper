@@ -27,7 +27,9 @@
                 <div class="text-xl leading-5">
                   {{ formatDay(weekDate.toString()) }}
                 </div>
-                <div class="text-xs">{{ toLunar(weekDate.toString()) }}</div>
+                <div class="text-xs" :class="{ 'text-yellow-200 font-bold': solarTerms[weekDate.toString()] }">
+                  {{ toLunar(weekDate.toString()) }}
+                </div>
               </div>
             </CalendarCell>
           </CalendarGridRow>
@@ -51,11 +53,13 @@ import {
   CalendarHeading,
 } from '@/components/ui/calendar'
 import { onMounted, onUnmounted, ref } from 'vue'
+import { solarTerms } from './solarTerms'
 
 const locale = ref('en')
 // const locale = ref('zh')
 
 function toLunar(date: string, type: 'month' | 'year' = 'month') {
+  if (type === 'month' && solarTerms[date]) return solarTerms[date]
   const [year, month, day] = date.split('-')
   const solar = SolarDay.fromYmd(+year, +month, +day)
   const lunar = solar.getLunarDay().toString()
