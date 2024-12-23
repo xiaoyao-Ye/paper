@@ -68,9 +68,9 @@ app.whenReady().then(async () => {
   // store.delete(WALLPAPER_CATEGORY_KEY)
   // store.delete(COMPONENT_OPTION_KEY)
   const value = store.get(WALLPAPER_CATEGORY_KEY)
-  if (value) await setWallpaper(null, value)
+  if (value) await setWallpaper(value)
   const component = store.get(COMPONENT_OPTION_KEY)
-  if (component) await setComponent(null, component.value, component.query)
+  if (component) await setComponent(component.value, component.query)
 
   const isAutoLaunch = app.getLoginItemSettings().wasOpenedAtLogin
   if (isAutoLaunch) {
@@ -124,8 +124,8 @@ if (!VITE_DEV_SERVER_URL) {
 }
 
 let wallpaperWindow: BrowserWindow | null = null
-let wallpaperCategory: CategoryValue | string = ''
 const WALLPAPER_CATEGORY_KEY = 'wallpaper_category'
+let wallpaperCategory: CategoryValue | string = store.get(WALLPAPER_CATEGORY_KEY)
 
 function createWallpaperWindow() {
   // 获取主屏幕
@@ -183,9 +183,7 @@ function isCategoryValue(value: CategoryValue | string, obj: Record<string, stri
   return Object.values(obj).includes(value)
 }
 
-async function setWallpaper(_, value: CategoryValue | string) {
-  if (wallpaperCategory === value) return
-
+async function setWallpaper(value: CategoryValue | string) {
   if (!wallpaperWindow) createWallpaperWindow()
 
   if (isCategoryValue(value, category)) {
@@ -212,19 +210,20 @@ async function setCategoryWallpaper(value: CategoryValue) {
   }
 }
 
-ipcMain.on('set-wallpaper', setWallpaper)
+ipcMain.on('set-wallpaper', (_, value: CategoryValue | string) => {
+  if (wallpaperCategory === value) return
+  setWallpaper(value)
+})
 
 const COMPONENT_OPTION_KEY = 'component_option'
 let componentViews: Record<string, WebContentsView> = {}
-let componentOption: Option = { value: '', query: {} }
+let componentOption: Option = store.get(COMPONENT_OPTION_KEY)
 interface Option {
   value: CategoryValue | string
   query: Record<string, string>
 }
 
-async function setComponent(_, value: CategoryValue | string, query: Record<string, string>) {
-  if (componentOption.value === value && qs.stringify(componentOption.query) === qs.stringify(query)) return
-
+async function setComponent(value: CategoryValue | string, query: Record<string, string>) {
   if (!wallpaperWindow) createWallpaperWindow()
 
   const { width, height } = screen.getPrimaryDisplay().bounds
@@ -265,7 +264,10 @@ async function setComponent(_, value: CategoryValue | string, query: Record<stri
   store.set(COMPONENT_OPTION_KEY, componentOption)
 }
 
-ipcMain.on('set-component', setComponent)
+ipcMain.on('set-component', (_, value: CategoryValue | string, query: Record<string, string>) => {
+  if (componentOption.value === value && qs.stringify(componentOption.query) === qs.stringify(query)) return
+  setComponent(value, query)
+})
 
 ipcMain.on('event', (_, ...args) => {
   wallpaperWindow.webContents.send('event', ...args)
