@@ -1,9 +1,9 @@
 // @see https://www.electron.build/configuration/configuration
 {
   $schema: 'https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json',
-  appId: '_Ghosteye.wallpaper.app',
+  appId: 'com._Ghosteye.Wallpaper',
   asar: true,
-  productName: 'wallpaper',
+  productName: 'Wallpaper',
   directories: {
     output: 'release/${version}',
   },
