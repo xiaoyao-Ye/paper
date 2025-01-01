@@ -18,7 +18,7 @@
         <CalendarGridBody>
           <CalendarGridRow class="w-full mt-2 tracking-wide" v-for="(weekDates, index) in month.rows" :key="`weekDate-${index}`">
             <CalendarCell
-              class="px-3"
+              class="flex-1 px-3"
               :class="{ shadow: date.toString() === weekDate.toString() }"
               v-for="weekDate in weekDates"
               :key="weekDate.toString()"
