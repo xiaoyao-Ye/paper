@@ -115,8 +115,7 @@ let wallpaperCategory: CategoryValue | string = store.get(WALLPAPER_CATEGORY_KEY
 
 function createWallpaperWindow() {
   // 获取主屏幕
-  const primaryDisplay = screen.getPrimaryDisplay()
-  const { width, height, x, y } = primaryDisplay.bounds
+  const { width, height, x, y } = screen.getPrimaryDisplay().bounds
 
   wallpaperWindow = new BrowserWindow({
     width,
@@ -147,6 +146,12 @@ function createWallpaperWindow() {
 
   wallpaperWindow.on('closed', () => {
     wallpaperWindow = null
+  })
+
+  wallpaperWindow.on('resize', () => {
+    let view = componentViews['calendar']
+    const { width, height } = screen.getPrimaryDisplay().bounds
+    view && view.setBounds({ x: width - width / 3, y: 0, width: width / 3, height: height / 3 })
   })
 
   screen.on('display-metrics-changed', () => {
@@ -200,16 +205,13 @@ interface Option {
 async function setComponent(value: CategoryValue | string, query: Record<string, string>) {
   if (!wallpaperWindow) createWallpaperWindow()
 
-  const { width, height } = screen.getPrimaryDisplay().bounds
-  const w = width / 3
-  const h = height / 3
-
   let view = componentViews[value]
   // 已存在的组件更新 options, 不存在的组件才创建组件
   if (!view) {
     view = new WebContentsView()
+    const { width, height } = screen.getPrimaryDisplay().bounds
     view.setBackgroundColor('rgba(255,255,255,0)')
-    view.setBounds({ x: width - w, y: 0, width: w, height: h })
+    view.setBounds({ x: width - width / 3, y: 0, width: width / 3, height: height / 3 })
     wallpaperWindow.contentView.addChildView(view)
     componentViews[value] = view
   }
