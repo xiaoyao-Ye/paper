@@ -42,6 +42,8 @@ const preload = path.join(__dirname, '../preload/index.mjs')
 const indexHtml = path.join(RENDERER_DIST, 'index.html')
 
 async function createWindow() {
+  app.dock.show()
+
   win = new BrowserWindow({
     title: 'wallpaper',
     icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
@@ -61,6 +63,7 @@ async function createWindow() {
 
   win.on('closed', () => {
     app.dock.hide()
+    win = null
   })
 }
 
@@ -77,13 +80,10 @@ app.whenReady().then(async () => {
     app.dock.hide()
   } else {
     createWindow()
-    // 手动显示, 抵消 setVisibleOnAllWorkspaces 的副作用, 首次打开时 opt + cmd + h 还是无法 hide win窗口
-    app.dock.show()
   }
 })
 
 app.on('window-all-closed', () => {
-  win = null
   if (process.platform !== 'darwin') app.quit()
 })
 
@@ -96,21 +96,7 @@ app.on('second-instance', () => {
 })
 
 app.on('activate', () => {
-  app.dock.show()
-  const allWindows = BrowserWindow.getAllWindows()
-  if (allWindows.length) {
-    const mainWindow = allWindows.find(w => w !== wallpaperWindow)
-    if (mainWindow) {
-      mainWindow.focus()
-    } else {
-      // 如果没有主窗口，创建一个新的
-      createWindow()
-    }
-  } else {
-    createWindow()
-  }
-  // if (!allWindows.length) return createWindow()
-  // win ? win.focus() : createWindow() // 会主进程错误
+  win ? win.focus() : createWindow()
 })
 
 if (!VITE_DEV_SERVER_URL) {
@@ -163,13 +149,6 @@ function createWallpaperWindow() {
     wallpaperWindow = null
   })
 
-  if (process.platform === 'darwin') {
-    wallpaperWindow.setVisibleOnAllWorkspaces(true, {
-      // 这种方式没闪烁, 但是 win 窗口无法触发 option + command + h 的 hide 效果,并且触发了类似 app.dock.hide() 的效果
-      visibleOnFullScreen: true,
-    })
-  }
-
   screen.on('display-metrics-changed', () => {
     const { width, height, x, y } = screen.getPrimaryDisplay().bounds
     const { width: w, height: h } = wallpaperWindow.getBounds()
@@ -190,11 +169,6 @@ async function setWallpaper(value: CategoryValue | string) {
     await setCategoryWallpaper(value)
   } else {
     await wallpaperWindow.loadURL(value)
-  }
-
-  if (!wallpaperCategory) {
-    app.dock.show()
-    wallpaperWindow.focus()
   }
 
   wallpaperCategory = value
@@ -254,11 +228,6 @@ async function setComponent(value: CategoryValue | string, query: Record<string,
     await view.webContents.loadFile(value)
   }
 
-  // 抵消 client 无法关闭的副作用
-  if (!wallpaperCategory) {
-    app.dock.show()
-    wallpaperWindow.focus()
-  }
   componentOption.value = value
   componentOption.query = query
   store.set(COMPONENT_OPTION_KEY, componentOption)
