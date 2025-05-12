@@ -6,7 +6,6 @@ import { fileURLToPath } from 'node:url'
 import qs from 'qs'
 import { type CategoryValue } from '../config/index'
 import { createDesktopWindow } from './window'
-import { useDebounceFn } from '@vueuse/core'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const store = new Store()
@@ -77,6 +76,14 @@ function getDisplayIndex(displayId: number) {
   return displays.findIndex(d => d.id === displayId)
 }
 
+function debounceFn(fn: Function, delay: number) {
+  let timer: NodeJS.Timeout | null = null
+  return function (...args: any[]) {
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(() => fn(...args), delay)
+  }
+}
+
 app.whenReady().then(async () => {
   displays = screen.getAllDisplays()
 
@@ -88,7 +95,7 @@ app.whenReady().then(async () => {
   })
 
   // 设置壁纸跟随屏幕而不是系统的主副屏
-  const handleDisplayMetricsChanged = useDebounceFn(() => {
+  const handleDisplayMetricsChanged = debounceFn(() => {
     const displays = screen.getAllDisplays()
     for (const [displayId, win] of Object.entries(wallpaperWindows)) {
       const display = displays.find(d => d.id === Number(displayId))
