@@ -52,15 +52,15 @@ const component = ref([
     width: '100%',
     height: '400',
   },
-  {
-    name: 'ios17Clock?bg=transparent',
-    top: '0',
-    left: '0',
-    right: 'auto',
-    bottom: 'auto',
-    width: '640',
-    height: '360',
-  },
+  // {
+  //   name: 'ios17Clock?bg=transparent',
+  //   top: '0',
+  //   left: '0',
+  //   right: 'auto',
+  //   bottom: 'auto',
+  //   width: '640',
+  //   height: '360',
+  // },
 ])
 </script>
 
