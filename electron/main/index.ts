@@ -81,7 +81,6 @@ app.whenReady().then(async () => {
   displays = screen.getAllDisplays()
 
   // 启动应用初始化壁纸
-  const wallpapers = store.get(WALLPAPER_CATEGORY_KEY) ?? []
   wallpapers.forEach(({ displayId, value }) => {
     const hasDisplay = displays.some(d => d.id === displayId)
     if (!hasDisplay) return
@@ -91,13 +90,13 @@ app.whenReady().then(async () => {
   // 设置壁纸跟随屏幕而不是系统的主副屏
   const handleDisplayMetricsChanged = useDebounceFn(() => {
     const displays = screen.getAllDisplays()
-    displays.forEach(d => {
-      const win = wallpaperWindows[d.id]
-      if (!win) return
-      const { width, height, x, y } = d.bounds
-      win.setSize(width, height, true)
-      win.setPosition(x, y, true)
-    })
+    for (const [displayId, win] of Object.entries(wallpaperWindows)) {
+      const display = displays.find(d => d.id === Number(displayId))
+      if (!display) return win.close()
+      const { width, height, x, y } = display.bounds
+      win.setSize(width, height)
+      win.setPosition(x, y)
+    }
   }, 200)
   screen.on('display-metrics-changed', handleDisplayMetricsChanged)
 
@@ -141,7 +140,7 @@ interface Wallpaper {
   value: CategoryValue | string
 }
 const WALLPAPER_CATEGORY_KEY = 'wallpaper_category'
-let wallpaperCategory: Array<Wallpaper> = store.get(WALLPAPER_CATEGORY_KEY) ?? []
+let wallpapers: Array<Wallpaper> = store.get(WALLPAPER_CATEGORY_KEY) ?? []
 
 const wallpaperWindows: Record<number, BrowserWindow> = {}
 async function setWallpaper(displayId: number, value: CategoryValue | string) {
@@ -168,9 +167,10 @@ async function setWallpaper(displayId: number, value: CategoryValue | string) {
 }
 
 ipcMain.on('set-wallpaper', (_, displayId: number, value: CategoryValue | string) => {
-  const index = getDisplayIndex(displayId)
-  wallpaperCategory[index] = { displayId, value }
-  store.set(WALLPAPER_CATEGORY_KEY, wallpaperCategory)
+  const index = wallpapers.findIndex(w => w.displayId === displayId)
+  if (index === -1) wallpapers.push({ displayId, value })
+  else wallpapers[index] = { displayId, value }
+  store.set(WALLPAPER_CATEGORY_KEY, wallpapers)
   setWallpaper(displayId, value)
 })
 
@@ -184,14 +184,14 @@ interface Option {
 ipcMain.on('remove-all', (_, displayId: number) => {
   if (!wallpaperWindows[displayId]) return
   wallpaperWindows[displayId].close()
-  const index = getDisplayIndex(displayId)
-  wallpaperCategory.splice(index, 1)
-  store.set(WALLPAPER_CATEGORY_KEY, wallpaperCategory)
+  const index = wallpapers.findIndex(w => w.displayId === displayId)
+  if (index !== -1) wallpapers.splice(index, 1)
+  store.set(WALLPAPER_CATEGORY_KEY, wallpapers)
 })
 
 ipcMain.handle('get-wallpaper-data', (_, displayId: number) => {
-  const index = getDisplayIndex(displayId)
-  return wallpaperCategory[index].value
+  const wallpaper = wallpapers.find(w => w.displayId === displayId)
+  return wallpaper?.value
 })
 
 ipcMain.on('set-component', (_, value: CategoryValue | string, query: Record<string, string>) => {
