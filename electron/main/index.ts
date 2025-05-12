@@ -1,10 +1,12 @@
 import { app, BrowserWindow, ipcMain, screen, WebContentsView } from 'electron'
-import { fileURLToPath } from 'node:url'
-import path from 'node:path'
-import os from 'node:os'
-import qs from 'qs'
 import Store from 'electron-store'
-import { category, type CategoryValue } from '../config/index'
+import os from 'node:os'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import qs from 'qs'
+import { type CategoryValue } from '../config/index'
+import { createDesktopWindow } from './window'
+import { useDebounceFn } from '@vueuse/core'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const store = new Store()
@@ -67,14 +69,39 @@ async function createWindow() {
   })
 }
 
-app.whenReady().then(async () => {
-  // store.delete(WALLPAPER_CATEGORY_KEY)
-  // store.delete(COMPONENT_OPTION_KEY)
-  const value = store.get(WALLPAPER_CATEGORY_KEY)
-  if (value) await setWallpaper(value)
-  const component = store.get(COMPONENT_OPTION_KEY)
-  if (component) await setComponent(component.value, component.query)
+let displays: Electron.Display[] = []
+function getDisplayById(displayId: number) {
+  return displays.find(d => d.id === displayId)
+}
+function getDisplayIndex(displayId: number) {
+  return displays.findIndex(d => d.id === displayId)
+}
 
+app.whenReady().then(async () => {
+  displays = screen.getAllDisplays()
+
+  // 启动应用初始化壁纸
+  const wallpapers = store.get(WALLPAPER_CATEGORY_KEY) ?? []
+  wallpapers.forEach(({ displayId, value }) => {
+    const hasDisplay = displays.some(d => d.id === displayId)
+    if (!hasDisplay) return
+    setWallpaper(displayId, value)
+  })
+
+  // 设置壁纸跟随屏幕而不是系统的主副屏
+  const handleDisplayMetricsChanged = useDebounceFn(() => {
+    const displays = screen.getAllDisplays()
+    displays.forEach(d => {
+      const win = wallpaperWindows[d.id]
+      if (!win) return
+      const { width, height, x, y } = d.bounds
+      win.setSize(width, height, true)
+      win.setPosition(x, y, true)
+    })
+  }, 200)
+  screen.on('display-metrics-changed', handleDisplayMetricsChanged)
+
+  // 开机启动不创建 client
   const isAutoLaunch = app.getLoginItemSettings().wasOpenedAtLogin
   if (isAutoLaunch) {
     app.dock.hide()
@@ -109,137 +136,74 @@ if (!VITE_DEV_SERVER_URL) {
   })
 }
 
-let wallpaperWindow: BrowserWindow | null = null
+interface Wallpaper {
+  displayId: number
+  value: CategoryValue | string
+}
 const WALLPAPER_CATEGORY_KEY = 'wallpaper_category'
-let wallpaperCategory: CategoryValue | string = store.get(WALLPAPER_CATEGORY_KEY)
+let wallpaperCategory: Array<Wallpaper> = store.get(WALLPAPER_CATEGORY_KEY) ?? []
 
-function createWallpaperWindow() {
-  // 获取主屏幕
-  const { width, height, x, y } = screen.getPrimaryDisplay().bounds
+const wallpaperWindows: Record<number, BrowserWindow> = {}
+async function setWallpaper(displayId: number, value: CategoryValue | string) {
+  if (!wallpaperWindows[displayId]) {
+    const display = getDisplayById(displayId)
+    let win = createDesktopWindow(display)
+    wallpaperWindows[displayId] = win
 
-  wallpaperWindow = new BrowserWindow({
-    width,
-    height,
-    x,
-    y,
-    type: 'desktop', // 设置为桌面窗口
-    frame: false, // 无边框
-    transparent: true,
-    titleBarStyle: 'hidden',
-    roundedCorners: false, // 禁用圆角
-    // Windows 下必须配置，而 MacOS 则不需要（否则会打开一个全屏新桌面）
-    fullscreen: process.platform !== 'darwin',
-    // 使覆盖全屏幕，包含 MacOS Menu Bar
-    enableLargerThanScreen: true,
-    // Windows 下必须配置，否则会禁用视频播放
-    // type: 'toolbar',
-    // trafficLightPosition: { x: 999999, y: 999999 }, // 将红绿灯按钮移到看不见的位置
-    // show: false,
-    // resizable: false,
-    // movable: false,
-    // focusable: false,
-    // useContentSize: true,
-    webPreferences: {
-      preload,
-    },
-  })
+    win.on('closed', () => {
+      // win = null
+      delete wallpaperWindows[displayId]
+    })
 
-  wallpaperWindow.on('closed', () => {
-    wallpaperWindow = null
-  })
-
-  wallpaperWindow.on('resize', () => {
-    let view = componentViews['calendar']
-    const { width, height } = screen.getPrimaryDisplay().bounds
-    view && view.setBounds({ x: width - width / 3, y: 0, width: width / 3, height: height / 3 })
-  })
-
-  screen.on('display-metrics-changed', () => {
-    const { width, height, x, y } = screen.getPrimaryDisplay().bounds
-    const { width: w, height: h } = wallpaperWindow.getBounds()
-    if (width === w && height === h) return
-    wallpaperWindow.setSize(width, height, true)
-    wallpaperWindow.setPosition(x, y, true)
-  })
-}
-
-function isCategoryValue(value: CategoryValue | string, obj: Record<string, string>): value is CategoryValue {
-  return Object.values(obj).includes(value)
-}
-
-async function setWallpaper(value: CategoryValue | string) {
-  if (!wallpaperWindow) createWallpaperWindow()
-
-  if (isCategoryValue(value, category)) {
-    await setCategoryWallpaper(value)
-  } else {
-    await wallpaperWindow.loadURL(value)
+    const hash = `wallpaper?displayId=${displayId}`
+    if (VITE_DEV_SERVER_URL) {
+      await win.loadURL(`${VITE_DEV_SERVER_URL}#/${hash}`)
+      win.webContents.openDevTools()
+    } else {
+      await win.loadFile(indexHtml, { hash: hash })
+    }
   }
 
-  wallpaperCategory = value
-  store.set(WALLPAPER_CATEGORY_KEY, value)
+  wallpaperWindows[displayId].webContents.send('wallpaper-data', value)
 }
 
-async function setCategoryWallpaper(value: CategoryValue) {
-  if (VITE_DEV_SERVER_URL) {
-    await wallpaperWindow.loadURL(`${VITE_DEV_SERVER_URL}#/${value}`)
-    wallpaperWindow.webContents.openDevTools()
-  } else {
-    await wallpaperWindow.loadFile(indexHtml, { hash: value })
-  }
-}
-
-ipcMain.on('set-wallpaper', (_, value: CategoryValue | string) => {
-  if (wallpaperCategory === value) return
-  setWallpaper(value)
+ipcMain.on('set-wallpaper', (_, displayId: number, value: CategoryValue | string) => {
+  const index = getDisplayIndex(displayId)
+  wallpaperCategory[index] = { displayId, value }
+  store.set(WALLPAPER_CATEGORY_KEY, wallpaperCategory)
+  setWallpaper(displayId, value)
 })
 
 const COMPONENT_OPTION_KEY = 'component_option'
-let componentViews: Record<string, WebContentsView> = {}
 let componentOption: Option = store.get(COMPONENT_OPTION_KEY)
 interface Option {
   value: CategoryValue | string
   query: Record<string, string>
 }
 
-async function setComponent(value: CategoryValue | string, query: Record<string, string>) {
-  if (!wallpaperWindow) createWallpaperWindow()
+ipcMain.on('remove-all', (_, displayId: number) => {
+  if (!wallpaperWindows[displayId]) return
+  wallpaperWindows[displayId].close()
+  const index = getDisplayIndex(displayId)
+  wallpaperCategory.splice(index, 1)
+  store.set(WALLPAPER_CATEGORY_KEY, wallpaperCategory)
+})
 
-  let view = componentViews[value]
-  // 已存在的组件更新 options, 不存在的组件才创建组件
-  if (!view) {
-    view = new WebContentsView()
-    const { width, height } = screen.getPrimaryDisplay().bounds
-    view.setBackgroundColor('rgba(255,255,255,0)')
-    view.setBounds({ x: width - width / 3, y: 0, width: width / 3, height: height / 3 })
-    wallpaperWindow.contentView.addChildView(view)
-    componentViews[value] = view
-  }
-
-  if (isCategoryValue(value, category)) {
-    const hash = `${value}?${qs.stringify(query)}`
-    if (VITE_DEV_SERVER_URL) {
-      await view.webContents.loadURL(`${VITE_DEV_SERVER_URL}#/${hash}`)
-      view.webContents.openDevTools()
-    } else {
-      await view.webContents.loadFile(indexHtml, { hash })
-    }
-    // 更新 options 需要重新加载
-    view.webContents.reload()
-  } else {
-    await view.webContents.loadFile(value)
-  }
-
-  componentOption.value = value
-  componentOption.query = query
-  store.set(COMPONENT_OPTION_KEY, componentOption)
-}
+ipcMain.handle('get-wallpaper-data', (_, displayId: number) => {
+  const index = getDisplayIndex(displayId)
+  return wallpaperCategory[index].value
+})
 
 ipcMain.on('set-component', (_, value: CategoryValue | string, query: Record<string, string>) => {
   if (componentOption.value === value && qs.stringify(componentOption.query) === qs.stringify(query)) return
-  setComponent(value, query)
+  // setComponent(value, query)
 })
 
-ipcMain.on('event', (_, ...args) => {
-  wallpaperWindow.webContents.send('event', ...args)
+ipcMain.handle('displays', _ => {
+  return displays.map(d => ({ id: d.id, name: d.label }))
+})
+
+ipcMain.handle('reset-store', _ => {
+  store.delete(WALLPAPER_CATEGORY_KEY)
+  store.delete(COMPONENT_OPTION_KEY)
 })

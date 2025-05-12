@@ -20,3 +20,7 @@ export function handleVisibilityChange() {
     })
   }
 }
+
+export function isUrl(str: string) {
+  return str.startsWith('http') || str.startsWith('file')
+}

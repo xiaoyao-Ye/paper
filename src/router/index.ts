@@ -9,6 +9,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/client/index.vue'),
   },
   {
+    path: '/wallpaper',
+    name: 'wallpaper',
+    component: () => import('@/background/index.vue'),
+  },
+  {
     path: `/${category.ios17Clock}`,
     name: category.ios17Clock,
     component: () => import('@/background/ios17Clock/index.vue'),

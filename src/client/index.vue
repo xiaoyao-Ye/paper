@@ -7,6 +7,8 @@ import { Card, CardFooter, CardHeader } from '@/components/ui/card'
 import ThemeToggle from '@/components/theme/index.vue'
 import { ref, reactive, computed } from 'vue'
 import { category, type CategoryValue } from '@/config'
+import { isUrl } from '@/utils'
+import { onMounted } from 'vue'
 
 const wallpaperUrl = ref<string>('')
 const wallpaperList = ref<string[]>(['ios17Clock', 'star', 'solar'])
@@ -18,16 +20,23 @@ const componentConfig = reactive({
   // customBG: '',
 })
 
-function isUrl(str: string) {
-  return str.startsWith('http') || str.startsWith('file')
-}
-
 const previewList = computed(() => {
   return wallpaperList.value.map(w => (isUrl(w) ? w : baseURL + w))
 })
 
-function setWallpaper(value: CategoryValue | string) {
-  window.ipcRenderer.send('set-wallpaper', value)
+const displays = ref<{ id: number; name: string }[]>([])
+
+onMounted(async () => {
+  // 初始化获取
+  displays.value = await window.ipcRenderer.invoke('displays')
+})
+
+function removeAll(displayId: number) {
+  window.ipcRenderer.send('remove-all', displayId)
+}
+
+function setWallpaper(displayId: number, value: CategoryValue | string) {
+  window.ipcRenderer.send('set-wallpaper', displayId, value)
 }
 
 function setComponent(value: CategoryValue | string) {
@@ -44,6 +53,10 @@ function addWallpaper() {
 function removeWallpaper(index: number) {
   wallpaperList.value.splice(index, 1)
 }
+
+function resetStore() {
+  window.ipcRenderer.invoke('reset-store')
+}
 </script>
 
 <template>
@@ -54,6 +67,7 @@ function removeWallpaper(index: number) {
           <div class="flex items-center space-x-2">
             <ThemeToggle />
           </div>
+          <Button variant="outline" size="sm" @click="resetStore">清除壁纸缓存</Button>
         </div>
       </div>
     </header>
@@ -67,6 +81,14 @@ function removeWallpaper(index: number) {
 
         <!-- 壁纸设置页签 -->
         <TabsContent value="wallpaper">
+          <div>
+            <Button v-for="item in displays" :key="item.id" @click="removeAll(item.id)">移除{{ item.name }}组件和壁纸</Button>
+          </div>
+
+          <div>
+            <Button v-for="item in displays" :key="item.id" @click="setWallpaper(item.id, '')">移除{{ item.name }}壁纸</Button>
+          </div>
+
           <Label>添加自定义壁纸</Label>
           <div class="flex items-center py-2 space-x-2">
             <Input v-model="wallpaperUrl" placeholder="输入网页URL" class="w-[300px]" />
@@ -84,7 +106,14 @@ function removeWallpaper(index: number) {
                   </div>
                 </CardHeader>
                 <CardFooter class="flex justify-between p-2 space-x-2">
-                  <Button variant="ghost" size="sm" @click="setWallpaper(wallpaperList[index])">设为壁纸</Button>
+                  <Button
+                    v-for="item in displays"
+                    :key="item.id"
+                    variant="ghost"
+                    size="sm"
+                    @click="setWallpaper(item.id, wallpaperList[index])">
+                    为 {{ item.name }} 设为壁纸
+                  </Button>
                   <!-- <Button variant="ghost" size="sm" @click="removeWallpaper(index)">删除</Button> -->
                 </CardFooter>
               </Card>
